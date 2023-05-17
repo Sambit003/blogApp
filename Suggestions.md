@@ -16,5 +16,5 @@
     *For more migration related commands , just type (python manage.py)*
 
 
-** Please don't mind anything !! As the name describes , these are purely my suggestion ,(Not even an advice!!) **
-** Merging is also upon you **
+**Please don't mind anything !! As the name describes , these are purely my suggestion ,(Not even an advice!!)**
+**Merging is also upon you**
