@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from app.forms import CommentForm, SubscribeForm
-from app.models import Post, Comments
+from app.models import Post, Comments, Tag
 
 '''
 the below function is the view for the home page and it returns the home.html template
@@ -64,3 +64,13 @@ def index(request):
 
     context = {'posts': Post.objects.all(), 'top_posts': top_posts, 'recent_post': recent_post, 'subscribe_form': subscribe_form, 'subscribe_successful': subscribe_successful, 'featured_blog': featured_blog}
     return render(request, 'app/index.html', context)
+
+
+def tag_page(request, slug):
+    tag = Tag.objects.get(slug=slug)
+    top_posts = Post.objects.filter(tags__in=[tag.id]).order_by('-view_count')[0:2]
+    recent_post = Post.objects.filter(tags__in=[tag.id]).order_by('-last_modified')[0:2]
+    tags = Tag.objects.all()
+
+    context = {'tag': tag, 'top_posts': top_posts, 'recent_post': recent_post, 'tags': tags}
+    return render(request, 'app/tag.html', context)
