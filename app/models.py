@@ -44,6 +44,8 @@ class Post(models.Model):
     tags = models.ManyToManyField(Tag, blank=True, related_name='post')
     view_count = models.IntegerField(null=True, blank=True)
 
+    is_featured = models.BooleanField(default=False)
+
 
 '''
 the below class is the model for the comments and it has the following fields:
@@ -65,5 +67,20 @@ class Comments(models.Model):
     email = models.EmailField(max_length=200)
     website = models.CharField(max_length=200, null=True, blank=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, null= True, blank= True, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='comments')
     parent = models.ForeignKey('self', on_delete=models.DO_NOTHING, null=True, blank=True, related_name='replies')
+
+
+'''
+the below class is the model for the subscribe and it has the following fields:
+email: the email of the person who subscribed
+date: the date and time the person subscribed
+'''
+
+
+class Subscribe(models.Model):
+    email = models.EmailField(max_length=100)
+    date = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.email
