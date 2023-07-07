@@ -46,6 +46,8 @@ class Post(models.Model):
 
     is_featured = models.BooleanField(default=False)
 
+    author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+
 
 '''
 the below class is the model for the comments and it has the following fields:
@@ -84,3 +86,24 @@ class Subscribe(models.Model):
 
     def __str__(self):
         return self.email
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_image = models.ImageField(upload_to='images/', blank=True, null=True)
+    slug = models.SlugField(max_length=200, unique=True)
+    bio = models.TextField(blank=True, null=True, max_length=200)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.slug = slugify(self.user.username)
+        return super(Profile, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.user.first_name
+
+
+class WebsiteMeta(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(max_length=500)
+    about = models.TextField(max_length=5000)
