@@ -14,6 +14,7 @@ the below function is the view for the home page and it returns the home.html te
 
 
 def post_page(request, slug):
+    global liked
     post = Post.objects.get(slug=slug)
     comments = Comments.objects.filter(post=post, parent=None)
     form = CommentForm()
@@ -23,6 +24,13 @@ def post_page(request, slug):
     if post.bookmarks.filter(id=request.user.id).exists():
         bookmarked = True
         is_bookmarked = bookmarked
+
+    # Like check
+    is_liked = False
+    if post.likes.filter(id=request.user.id).exists():
+        liked = True
+    total_likes = post.total_likes()
+    is_liked = liked
 
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
@@ -51,7 +59,8 @@ def post_page(request, slug):
     else:
         post.view_count += 1
     post.save()
-    context = {'post': post, 'form': form, 'comments': comments, 'is_bookmarked': is_bookmarked}
+    context = {'post': post, 'form': form, 'comments': comments, 'is_bookmarked': is_bookmarked,
+               'is_liked': is_liked, 'total_likes': total_likes}
     return render(request, 'app/post.html', context)
 
 
@@ -145,3 +154,13 @@ def bookmark_post(request, slug):
     else:
         post.bookmarks.add(request.user)
     return HttpResponseRedirect(reverse('post_page',args=[str(slug)]))
+
+
+def like_post(request, slug):
+    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    if post.likes.filter(id=request.user.id).exists():
+        post.likes.remove(request.user)
+    else:
+        post.likes.add(request.user)
+    return HttpResponseRedirect(reverse('post_page', args=[str(slug)]))
+

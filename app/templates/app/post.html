@@ -51,7 +51,7 @@
                         </form>
                       {% else %}
                           <a class="track" href="{% url 'login' %}">
-                            <i class="uli uli-bookmark-full"></i>
+                            <i class="uli uli-bookmark"></i>
                             <p class="bookmark">Bookmark</p>
                           </a><br>
                       {% endif %}
@@ -78,7 +78,25 @@
                     <div class="social-share">
                       <div class="reactions">
                         <div class="likes">
-                          <i class="uil uil-heart"></i> <span>200</span>
+                        {% if user.is_authenticated %}
+                            <form action="{% url 'like_post' post.slug %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="post_id" value="{{ post.id }}">
+                                {% if is_liked %}
+                                    <button type="submit" class="track">
+                                        <i class="fa-solid fa-heart"></i> <span>{{ total_likes }}</span>
+                                    </button>
+                                {% else %}
+                                    <button type="submit" class="track">
+                                        <i class="uli uli-heart"></i> <span>{{ total_likes }}</span>
+                                    </button>
+                                {% endif %}
+                            </form>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="track">
+                                <i class="uli uli-heart"></i> <span>{{ total_likes }}</span>
+                            </a>
+                        {% endif %}
                         </div>
                         <div class="total-comments">
                           <i class="uil uil-comment-alt"></i>
