@@ -14,7 +14,6 @@ the below function is the view for the home page and it returns the home.html te
 
 
 def post_page(request, slug):
-    global liked
     post = Post.objects.get(slug=slug)
     comments = Comments.objects.filter(post=post, parent=None)
     form = CommentForm()
@@ -26,6 +25,7 @@ def post_page(request, slug):
         is_bookmarked = bookmarked
 
     # Like check
+    liked = False
     is_liked = False
     if post.likes.filter(id=request.user.id).exists():
         liked = True
@@ -59,8 +59,18 @@ def post_page(request, slug):
     else:
         post.view_count += 1
     post.save()
-    context = {'post': post, 'form': form, 'comments': comments, 'is_bookmarked': is_bookmarked,
-               'is_liked': is_liked, 'total_likes': total_likes}
+
+    # Sidebar
+    recent_posts = Post.objects.exclude(id=post.id).order_by('-last_modified')[0:3]
+    top_authors = User.objects.annotate(total_posts=Count('post')).order_by('-total_posts')
+    tags = Tag.objects.all()
+    related_posts = Post.objects.exclude(id=post.id).filter(author=post.author)[0:3]
+
+    context = {'post': post, 'form': form, 'comments': comments,
+               'is_bookmarked': is_bookmarked, 'is_liked': is_liked,
+               'total_likes': total_likes,
+               'recent_posts': recent_posts, 'top_authors': top_authors, 'tags': tags,
+               'related_posts': related_posts}
     return render(request, 'app/post.html', context)
 
 
@@ -153,7 +163,7 @@ def bookmark_post(request, slug):
         post.bookmarks.remove(request.user)
     else:
         post.bookmarks.add(request.user)
-    return HttpResponseRedirect(reverse('post_page',args=[str(slug)]))
+    return HttpResponseRedirect(reverse('post_page', args=[str(slug)]))
 
 
 def like_post(request, slug):
@@ -164,3 +174,20 @@ def like_post(request, slug):
         post.likes.add(request.user)
     return HttpResponseRedirect(reverse('post_page', args=[str(slug)]))
 
+
+def all_bookmarked_posts(request):
+    bookmarked_posts = Post.objects.filter(bookmarks=request.user)
+    context = {'bookmarked_posts': bookmarked_posts}
+    return render(request, 'app/all_bookmarked_posts.html', context)
+
+
+def all_posts(request):
+    all_posts_view = Post.objects.all()
+    context = {'all_posts_view': all_posts_view}
+    return render(request, 'app/all_posts.html', context)
+
+
+def all_liked_posts(request):
+    all_liked_posts_view = Post.objects.filter(likes=request.user)
+    context = {'all_liked_posts_view': all_liked_posts_view}
+    return render(request, 'app/all_liked_posts.html', context)
