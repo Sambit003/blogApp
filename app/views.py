@@ -1,10 +1,11 @@
+from django.contrib.auth import login
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.db.models import Count
 
-from app.forms import CommentForm, SubscribeForm
+from app.forms import CommentForm, SubscribeForm, NewUserForm
 from app.models import Post, Comments, Tag, Profile, WebsiteMeta
 
 '''
@@ -16,6 +17,12 @@ def post_page(request, slug):
     post = Post.objects.get(slug=slug)
     comments = Comments.objects.filter(post=post, parent=None)
     form = CommentForm()
+
+    # Bookmark check
+    is_bookmarked = False
+    if post.bookmarks.filter(id=request.user.id).exists():
+        bookmarked = True
+        is_bookmarked = bookmarked
 
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
@@ -44,7 +51,7 @@ def post_page(request, slug):
     else:
         post.view_count += 1
     post.save()
-    context = {'post': post, 'form': form, 'comments': comments}
+    context = {'post': post, 'form': form, 'comments': comments, 'is_bookmarked': is_bookmarked}
     return render(request, 'app/post.html', context)
 
 
@@ -70,7 +77,8 @@ def index(request):
             subscribe_successful = 'Thank you for subscribing!'
             subscribe_form = SubscribeForm()
 
-    context = {'posts': Post.objects.all(), 'top_posts': top_posts, 'website_info': website_info, 'recent_post': recent_post,
+    context = {'posts': Post.objects.all(), 'top_posts': top_posts, 'website_info': website_info,
+               'recent_post': recent_post,
                'subscribe_form': subscribe_form, 'subscribe_successful': subscribe_successful,
                'featured_blog': featured_blog}
     return render(request, 'app/index.html', context)
@@ -114,3 +122,26 @@ def about(request):
 
     context = {'website_info': website_info}
     return render(request, 'app/about.html', context)
+
+
+def register_user(request):
+    form = NewUserForm()
+    if request.method == 'POST':
+        form = NewUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            user = form.save()
+            login(request, user)
+            return redirect('index')
+
+    context = {'form': form}
+    return render(request, 'registration/registration.html', context)
+
+
+def bookmark_post(request, slug):
+    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    if post.bookmarks.filter(id=request.user.id).exists():
+        post.bookmarks.remove(request.user)
+    else:
+        post.bookmarks.add(request.user)
+    return HttpResponseRedirect(reverse('post_page',args=[str(slug)]))

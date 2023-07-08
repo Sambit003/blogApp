@@ -48,6 +48,8 @@ class Post(models.Model):
 
     author = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
+    bookmarks = models.ManyToManyField(User, related_name='bookmarks', blank=True, default=None)
+
 
 '''
 the below class is the model for the comments and it has the following fields:
